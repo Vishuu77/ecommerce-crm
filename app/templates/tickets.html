@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Returns &amp; Tickets · E-commerce CRM{% endblock %}
+{% block nav_tick %}active{% endblock %}
+{% block heading %}Returns &amp; Tickets{% endblock %}
+{% block body %}
+<details class="add">
+  <summary>+ Log a return / complaint</summary>
+  <form method="post" action="/ui/tickets" enctype="multipart/form-data" class="grid-form">
+    <select name="order_id" required>
+      <option value="">— select order —</option>
+      {% for o in orders %}<option value="{{ o.order_id }}">{{ o.order_id }} · {{ o.customer_name }}</option>{% endfor %}
+    </select>
+    <input name="customer_claim" placeholder="Customer claim / issue" required>
+    <input type="file" name="proof" accept="image/*,video/*">
+    <button type="submit">Log ticket</button>
+  </form>
+</details>
+
+<table>
+  <thead><tr><th>Ticket</th><th>Order</th><th>Claim</th><th>Proof</th><th>Decision</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+  {% for t in tickets %}
+    <tr>
+      <td><code>{{ t.ticket_id }}</code></td>
+      <td><code>{{ t.order_id }}</code></td>
+      <td>{{ t.customer_claim }}</td>
+      <td>{% if t.proof_url %}<a href="{{ t.proof_url }}" target="_blank">view</a>{% else %}<span class="muted">—</span>{% endif %}</td>
+      <td>{{ t.agent_decision }}</td>
+      <td><span class="pill {{ t.status | lower | replace(' ', '-') }}">{{ t.status }}</span></td>
+      <td>
+        <form method="post" action="/ui/tickets/{{ t.ticket_id }}/status" class="inline">
+          <select name="status">
+            <option {% if t.status=='In-Progress' %}selected{% endif %}>In-Progress</option>
+            <option {% if t.status=='Resolved' %}selected{% endif %}>Resolved</option>
+            <option {% if t.status=='Escalated' %}selected{% endif %}>Escalated</option>
+          </select>
+          <button>Update</button>
+        </form>
+      </td>
+    </tr>
+  {% else %}<tr><td colspan="7" class="muted">No tickets.</td></tr>{% endfor %}
+  </tbody>
+</table>
+{% endblock %}

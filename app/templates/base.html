@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}E-commerce CRM{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand">🛒 CRM</div>
+    <nav>
+      <a href="/" class="{% block nav_dash %}{% endblock %}">Dashboard</a>
+      <a href="/ui/products" class="{% block nav_prod %}{% endblock %}">Products</a>
+      <a href="/ui/orders" class="{% block nav_ord %}{% endblock %}">Orders</a>
+      <a href="/ui/tickets" class="{% block nav_tick %}{% endblock %}">Returns &amp; Tickets</a>
+      <a href="/docs" target="_blank">API Docs ↗</a>
+    </nav>
+  </aside>
+  <main class="content">
+    <header>
+      <h1>{% block heading %}{% endblock %}</h1>
+      <span class="env">{{ env_label | default('local') }}</span>
+    </header>
+    {% block body %}{% endblock %}
+  </main>
+</body>
+</html>

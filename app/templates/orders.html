@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Orders · E-commerce CRM{% endblock %}
+{% block nav_ord %}active{% endblock %}
+{% block heading %}Orders{% endblock %}
+{% block body %}
+<form method="get" class="row">
+  <input type="text" name="q" placeholder="Search order id or customer…" value="{{ q }}">
+  <button type="submit">Search</button>
+</form>
+
+<details class="add">
+  <summary>+ Add order</summary>
+  <form method="post" action="/ui/orders" class="grid-form">
+    <input name="order_id" placeholder="order_id (ORD-98231)" required>
+    <input name="customer_name" placeholder="customer_name" required>
+    <input name="customer_email" placeholder="customer_email">
+    <select name="product_id">
+      <option value="">— product —</option>
+      {% for p in products %}<option value="{{ p.product_id }}">{{ p.product_id }} · {{ p.name }}</option>{% endfor %}
+    </select>
+    <select name="delivery_status">
+      <option>Pending</option><option>Shipped</option><option>Delivered</option>
+    </select>
+    <select name="payment_status">
+      <option>Paid</option><option>Refunded</option>
+    </select>
+    <button type="submit">Save</button>
+  </form>
+</details>
+
+<table>
+  <thead><tr><th>Order</th><th>Customer</th><th>Product</th><th>Ordered</th><th>Delivered</th><th>Status</th><th>Payment</th><th></th></tr></thead>
+  <tbody>
+  {% for o in orders %}
+    <tr>
+      <td><code>{{ o.order_id }}</code></td>
+      <td>{{ o.customer_name }}<br><small class="muted">{{ o.customer_email }}</small></td>
+      <td>{{ o.product.name if o.product else '—' }}</td>
+      <td>{{ o.order_date.strftime('%Y-%m-%d') if o.order_date else '—' }}</td>
+      <td>{{ o.delivery_date.strftime('%Y-%m-%d') if o.delivery_date else '—' }}</td>
+      <td><span class="pill {{ o.delivery_status | lower }}">{{ o.delivery_status }}</span></td>
+      <td>{{ o.payment_status }}</td>
+      <td>
+        {% if o.delivery_status != 'Delivered' %}
+        <form method="post" action="/ui/orders/{{ o.order_id }}/deliver">
+          <button>Mark delivered</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+  {% else %}<tr><td colspan="8" class="muted">No orders.</td></tr>{% endfor %}
+  </tbody>
+</table>
+{% endblock %}

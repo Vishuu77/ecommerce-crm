@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · E-commerce CRM{% endblock %}
+{% block nav_dash %}active{% endblock %}
+{% block heading %}Dashboard{% endblock %}
+{% block body %}
+<div class="cards">
+  <div class="card"><div class="num">{{ stats.products }}</div><div class="lbl">Products</div></div>
+  <div class="card"><div class="num">{{ stats.orders }}</div><div class="lbl">Orders</div></div>
+  <div class="card"><div class="num">{{ stats.tickets }}</div><div class="lbl">Tickets</div></div>
+  <div class="card warn"><div class="num">{{ stats.open_tickets }}</div><div class="lbl">Open Tickets</div></div>
+  <div class="card warn"><div class="num">{{ stats.low_stock }}</div><div class="lbl">Low Stock</div></div>
+  <div class="card"><div class="num">₹{{ "{:,.0f}".format(stats.revenue) }}</div><div class="lbl">Order Value</div></div>
+</div>
+
+<h2>Recent Orders</h2>
+<table>
+  <thead><tr><th>Order</th><th>Customer</th><th>Product</th><th>Status</th><th>Payment</th></tr></thead>
+  <tbody>
+  {% for o in orders %}
+    <tr>
+      <td><code>{{ o.order_id }}</code></td>
+      <td>{{ o.customer_name }}</td>
+      <td>{{ o.product.name if o.product else '—' }}</td>
+      <td><span class="pill {{ o.delivery_status | lower }}">{{ o.delivery_status }}</span></td>
+      <td>{{ o.payment_status }}</td>
+    </tr>
+  {% else %}<tr><td colspan="5" class="muted">No orders yet.</td></tr>{% endfor %}
+  </tbody>
+</table>
+
+<h2>Recent Tickets</h2>
+<table>
+  <thead><tr><th>Ticket</th><th>Order</th><th>Claim</th><th>Decision</th><th>Status</th></tr></thead>
+  <tbody>
+  {% for t in tickets %}
+    <tr>
+      <td><code>{{ t.ticket_id }}</code></td>
+      <td><code>{{ t.order_id }}</code></td>
+      <td>{{ t.customer_claim[:60] }}{% if t.customer_claim and t.customer_claim|length > 60 %}…{% endif %}</td>
+      <td>{{ t.agent_decision }}</td>
+      <td><span class="pill {{ t.status | lower | replace(' ', '-') }}">{{ t.status }}</span></td>
+    </tr>
+  {% else %}<tr><td colspan="5" class="muted">No tickets yet.</td></tr>{% endfor %}
+  </tbody>
+</table>
+{% endblock %}
