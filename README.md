@@ -34,8 +34,9 @@ The database (`app/crm.db`) is created and seeded automatically on first start.
 ## Test
 
 ```bash
-python test_api.py           # 20 checks via TestClient (no server needed)
-python test_api.py --live    # hit a running server on :8000
+python -m pytest              # 8 tests: API CRUD + validation + UI render
+python test_api.py            # 20-check smoke test via TestClient
+python test_api.py --live     # hit a running server on :8000
 ```
 
 ## API
