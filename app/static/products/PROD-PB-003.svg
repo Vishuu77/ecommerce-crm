@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" role="img" aria-label="Power Bank">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#eef2ff"/><stop offset="1" stop-color="#dbe4ff"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#g)"/>
+  <circle cx="200" cy="205" r="150" fill="#ffffff" opacity="0.55"/>
+  <rect x="120" y="130" width="160" height="150" rx="20" fill="#111827"/>
+      <rect x="140" y="150" width="120" height="14" rx="7" fill="#31c48d"/>
+      <rect x="140" y="176" width="86" height="14" rx="7" fill="#4f8cff"/>
+      <rect x="176" y="240" width="48" height="14" rx="4" fill="#6b7280"/>
+</svg>

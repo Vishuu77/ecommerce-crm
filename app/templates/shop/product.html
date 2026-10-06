@@ -1,0 +1,64 @@
+{% extends "shop/base.html" %}
+{% block title %}{{ p.name }}{% endblock %}
+{% block body %}
+<div class="crumbs"><a href="/shop">Home</a> › <a href="/shop?category={{ p.category }}">{{ p.category }}</a> › <span>{{ p.name }}</span></div>
+
+<div class="pdetail">
+  <div class="pdetail-img">
+    <img src="{{ p.image_url }}" alt="{{ p.name }}">
+  </div>
+  <div class="pdetail-info">
+    <h1>{{ p.name }}</h1>
+    <div class="pcat">{{ p.category }} · <code>{{ p.product_id }}</code></div>
+    <div class="rate big">
+      <span class="stars">{{ p.rating }} ★</span>
+      <span class="rcount">{{ "{:,}".format(p.review_count) }} ratings</span>
+    </div>
+    <div class="pricerow big">
+      <span class="price big">₹{{ "{:,.0f}".format(p.price) }}</span>
+      {% if p.mrp and p.mrp > p.price %}
+        <span class="mrp big">₹{{ "{:,.0f}".format(p.mrp) }}</span>
+        <span class="offtext">{{ p.discount_pct }}% off</span>
+      {% endif %}
+    </div>
+    <div class="stock {{ p.stock_status | lower | replace(' ', '-') }}">{{ p.stock_status }} — {{ p.stock_qty }} available</div>
+    <p class="desc">{{ p.description }}</p>
+    <ul class="perks">
+      <li>✅ {{ p.return_window_days }}-day easy returns</li>
+      <li>🔁 Replacement-first policy</li>
+      <li>🚚 Free delivery on this item</li>
+      <li>🔒 Secure payment via UPI / cards</li>
+    </ul>
+    {% if p.stock_qty > 0 %}
+    <form method="post" action="/shop/cart/add" class="addrow big">
+      <input type="hidden" name="product_id" value="{{ p.product_id }}">
+      <label>Qty <input type="number" name="qty" value="1" min="1" max="{{ p.stock_qty }}"></label>
+      <button type="submit">Add to cart</button>
+      <a class="secondary" href="/shop/cart">Go to cart</a>
+    </form>
+    {% else %}
+      <button disabled class="disabled">Out of stock</button>
+    {% endif %}
+  </div>
+</div>
+
+{% if related %}
+<section class="related">
+  <h2>Customers also viewed</h2>
+  <div class="grid">
+    {% for r in related %}
+    <div class="pcard">
+      <a href="/shop/product/{{ r.product_id }}" class="pimg">
+        <img src="{{ r.image_url }}" alt="{{ r.name }}" loading="lazy">
+      </a>
+      <div class="pbody">
+        <a class="ptitle" href="/shop/product/{{ r.product_id }}">{{ r.name }}</a>
+        <div class="rate"><span class="stars">{{ r.rating }} ★</span></div>
+        <div class="pricerow"><span class="price">₹{{ "{:,.0f}".format(r.price) }}</span></div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}

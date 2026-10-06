@@ -1,0 +1,86 @@
+{% extends "shop/base.html" %}
+{% block title %}ShopKart — Home{% endblock %}
+{% block body %}
+<div class="hero-strip">
+  <h1>Everything you need, delivered fast</h1>
+  <p>Free returns within 7 days · Replacement-first policy · UPI &amp; cards</p>
+</div>
+
+<div class="catbar">
+  <a href="/shop?sort={{ sort }}" class="{% if not category %}active{% endif %}">All</a>
+  {% for c in categories %}
+    <a href="/shop?category={{ c }}&sort={{ sort }}" class="{% if category == c %}active{% endif %}">{{ c }}</a>
+  {% endfor %}
+</div>
+
+<div class="toolbar">
+  <span class="results">{{ products | length }} result(s){% if q %} for "{{ q }}"{% endif %}{% if category %} in {{ category }}{% endif %}</span>
+  {% if q or category or max_price %}<a class="clearlink" href="/shop">Clear filters</a>{% endif %}
+  <form class="sortform" method="get" action="/shop">
+    {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+    {% if category %}<input type="hidden" name="category" value="{{ category }}">{% endif %}
+    <label>Sort by
+      <select name="sort" onchange="this.form.submit()">
+        {% for key, label in sorts %}
+          <option value="{{ key }}" {% if sort == key %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+  </form>
+</div>
+
+<div class="shopwrap">
+  <aside class="filters">
+    <h3>Price</h3>
+    <form method="get" action="/shop">
+      {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+      {% if category %}<input type="hidden" name="category" value="{{ category }}">{% endif %}
+      <input type="hidden" name="sort" value="{{ sort }}">
+      <label class="radio"><input type="radio" name="max_price" value="499" {% if max_price=='499' %}checked{% endif %} onchange="this.form.submit()"> Under ₹500</label>
+      <label class="radio"><input type="radio" name="max_price" value="999" {% if max_price=='999' %}checked{% endif %} onchange="this.form.submit()"> Under ₹1,000</label>
+      <label class="radio"><input type="radio" name="max_price" value="2499" {% if max_price=='2499' %}checked{% endif %} onchange="this.form.submit()"> Under ₹2,500</label>
+      <label class="radio"><input type="radio" name="max_price" value="" {% if not max_price %}checked{% endif %} onchange="this.form.submit()"> Any price</label>
+    </form>
+    <h3>Category</h3>
+    {% for c in categories %}
+      <a class="flink {% if category == c %}on{% endif %}" href="/shop?category={{ c }}&sort={{ sort }}">{{ c }}</a>
+    {% endfor %}
+  </aside>
+
+  <div class="grid">
+    {% for p in products %}
+    <div class="pcard">
+      <a href="/shop/product/{{ p.product_id }}" class="pimg">
+        <img src="{{ p.image_url }}" alt="{{ p.name }}" loading="lazy">
+        {% if p.discount_pct %}<span class="off">{{ p.discount_pct }}% off</span>{% endif %}
+      </a>
+      <div class="pbody">
+        <a class="ptitle" href="/shop/product/{{ p.product_id }}">{{ p.name }}</a>
+        <div class="pcat">{{ p.category }}</div>
+        <div class="rate">
+          <span class="stars">{{ p.rating }} ★</span>
+          <span class="rcount">({{ "{:,}".format(p.review_count) }})</span>
+        </div>
+        <div class="pricerow">
+          <span class="price">₹{{ "{:,.0f}".format(p.price) }}</span>
+          {% if p.mrp and p.mrp > p.price %}<span class="mrp">₹{{ "{:,.0f}".format(p.mrp) }}</span>{% endif %}
+        </div>
+        <div class="stock {{ p.stock_status | lower | replace(' ', '-') }}">{{ p.stock_status }}</div>
+        <div class="delivery">Free delivery · 7-day returns</div>
+        {% if p.stock_qty > 0 %}
+        <form method="post" action="/shop/cart/add" class="addrow">
+          <input type="hidden" name="product_id" value="{{ p.product_id }}">
+          <input type="number" name="qty" value="1" min="1" max="{{ p.stock_qty }}" aria-label="Quantity">
+          <button type="submit">Add to cart</button>
+        </form>
+        {% else %}
+          <button disabled class="disabled">Out of stock</button>
+        {% endif %}
+      </div>
+    </div>
+    {% else %}
+      <p class="empty">No products found.</p>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

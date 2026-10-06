@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" role="img" aria-label="Masala Dabba">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fffbeb"/><stop offset="1" stop-color="#fdf0d5"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#g)"/>
+  <circle cx="200" cy="205" r="150" fill="#ffffff" opacity="0.55"/>
+  <ellipse cx="200" cy="150" rx="92" ry="26" fill="#9ca3af"/>
+      <path d="M108 150 L108 250 A92 26 0 0 0 292 250 L292 150 Z" fill="#cbd5e1"/>
+      <ellipse cx="200" cy="150" rx="72" ry="18" fill="#e5e7eb"/>
+      <circle cx="175" cy="152" r="16" fill="#f59e0b"/><circle cx="225" cy="152" r="16" fill="#ef4444"/>
+      <circle cx="200" cy="176" r="16" fill="#10b981"/>
+</svg>

@@ -1,0 +1,47 @@
+{% extends "shop/base.html" %}
+{% block title %}Order {{ order.order_id }}{% endblock %}
+{% block body %}
+<h1>Order {{ order.order_id }}</h1>
+<div class="orderstatus">
+  <span class="pill {{ order.payment_status | lower }}">Payment: {{ order.payment_status }}</span>
+  <span class="pill {{ order.delivery_status | lower }}">Delivery: {{ order.delivery_status }}</span>
+</div>
+
+<div class="orderbox">
+  <h2>Items</h2>
+  <table>
+    <thead><tr><th>Product</th><th>Unit</th><th>Qty</th><th>Total</th></tr></thead>
+    <tbody>
+    {% for it in order.items %}
+      <tr><td>{{ it.name }}</td><td>₹{{ "{:,.0f}".format(it.unit_price) }}</td>
+          <td>{{ it.qty }}</td><td>₹{{ "{:,.0f}".format(it.line_total) }}</td></tr>
+    {% endfor %}
+    </tbody>
+    <tfoot><tr><th colspan="3">Total</th><th>₹{{ "{:,.0f}".format(order.total_amount) }}</th></tr></tfoot>
+  </table>
+</div>
+
+<div class="orderbox">
+  <h2>Delivery</h2>
+  <p>{{ order.customer_name }}<br>{{ order.shipping_address }}</p>
+  <p class="muted">Updates sent to {{ order.customer_phone or order.customer_email }}</p>
+</div>
+
+{% if order.payment_status != 'Paid' %}
+  <a class="cta big" href="/shop/pay/{{ order.order_id }}">Complete payment →</a>
+{% endif %}
+
+<div class="orderbox">
+  <h2>Notifications</h2>
+  {% if notifs %}
+    <ul class="notifs">
+    {% for n in notifs %}
+      <li><span class="pill {{ n.status }}">{{ n.status }}</span> {{ n.body.split('\n')[0] }}
+        <small class="muted">{{ n.created_at.strftime('%d %b %H:%M') }}</small></li>
+    {% endfor %}
+    </ul>
+  {% else %}<p class="muted">No notifications yet.</p>{% endif %}
+</div>
+
+<a href="/portal/order?order_id={{ order.order_id }}">Need a return or replacement? →</a>
+{% endblock %}

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Shop{% endblock %}</title>
+  <link rel="stylesheet" href="/static/shop.css">
+</head>
+<body>
+  <header class="shopnav">
+    <a class="logo" href="/shop">🛍️ ShopKart</a>
+    <form class="navsearch" method="get" action="/shop">
+      <input type="text" name="q" placeholder="Search products…" value="{{ q | default('') }}">
+      <button type="submit">Search</button>
+    </form>
+    <nav class="navlinks">
+      <a href="/shop">Home</a>
+      {% if user %}<a href="/shop/orders">My Orders</a>{% endif %}
+      <a href="/portal">Returns</a>
+      <a href="/shop/cart" class="cartlink">🛒 Cart{% if cart_count %} <span class="badge">{{ cart_count }}</span>{% endif %}</a>
+      {% if user %}
+        <span class="who">Hi, {{ user.name.split(' ')[0] }}</span>
+        <form method="post" action="/shop/logout" class="inline"><button class="ghost">Logout</button></form>
+      {% else %}
+        <a href="/shop/login">Login</a>
+        <a href="/shop/register" class="cta">Sign up</a>
+      {% endif %}
+    </nav>
+  </header>
+  <main class="shopmain">
+    {% block body %}{% endblock %}
+  </main>
+  <footer class="shopfoot">
+    <span>ShopKart · demo store</span>
+    <span><a href="/">Staff CRM</a> · <a href="/portal">Returns &amp; Support</a> · <a href="/docs">API</a></span>
+  </footer>
+</body>
+</html>

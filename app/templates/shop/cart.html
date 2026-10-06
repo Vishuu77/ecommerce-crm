@@ -1,0 +1,47 @@
+{% extends "shop/base.html" %}
+{% block title %}Your Cart{% endblock %}
+{% block body %}
+<h1>Your Cart</h1>
+{% if items %}
+<table class="cart">
+  <thead><tr><th>Product</th><th>Price</th><th>Qty</th><th>Subtotal</th><th></th></tr></thead>
+  <tbody>
+  {% for ci in items %}
+    <tr>
+      <td>
+        <div class="cartprod">
+          <img src="{{ ci.product.image_url }}" alt="{{ ci.product.name }}" class="cartthumb">
+          <a href="/shop/product/{{ ci.product_id }}">{{ ci.product.name }}</a>
+        </div>
+      </td>
+      <td>₹{{ "{:,.0f}".format(ci.product.price) }}</td>
+      <td>
+        <form method="post" action="/shop/cart/update" class="qtyform">
+          <input type="hidden" name="item_id" value="{{ ci.id }}">
+          <input type="number" name="qty" value="{{ ci.qty }}" min="0" max="{{ ci.product.stock_qty }}">
+          <button class="ghost">Update</button>
+        </form>
+      </td>
+      <td>₹{{ "{:,.0f}".format(ci.product.price * ci.qty) }}</td>
+      <td>
+        <form method="post" action="/shop/cart/remove">
+          <input type="hidden" name="item_id" value="{{ ci.id }}">
+          <button class="danger">Remove</button>
+        </form>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+
+<div class="cartfoot">
+  <div class="totals">
+    <div><span>Items</span><span>{{ totals.count }}</span></div>
+    <div class="grand"><span>Total</span><span>₹{{ "{:,.0f}".format(totals.total) }}</span></div>
+  </div>
+  <a class="cta big" href="/shop/checkout">Proceed to checkout →</a>
+</div>
+{% else %}
+  <p class="empty">Your cart is empty. <a href="/shop">Browse products →</a></p>
+{% endif %}
+{% endblock %}

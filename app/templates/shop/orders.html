@@ -1,0 +1,25 @@
+{% extends "shop/base.html" %}
+{% block title %}My Orders{% endblock %}
+{% block body %}
+<h1>My Orders</h1>
+{% if orders %}
+<table class="orders">
+  <thead><tr><th>Order</th><th>Date</th><th>Items</th><th>Total</th><th>Payment</th><th>Delivery</th><th></th></tr></thead>
+  <tbody>
+  {% for o in orders %}
+    <tr>
+      <td><code>{{ o.order_id }}</code></td>
+      <td>{{ o.order_date.strftime('%d %b %Y') if o.order_date else '—' }}</td>
+      <td>{{ o.items | length }}</td>
+      <td>₹{{ "{:,.0f}".format(o.total_amount) }}</td>
+      <td><span class="pill {{ o.payment_status | lower }}">{{ o.payment_status }}</span></td>
+      <td><span class="pill {{ o.delivery_status | lower }}">{{ o.delivery_status }}</span></td>
+      <td><a href="/shop/order/{{ o.order_id }}">View</a></td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+  <p class="empty">No orders yet. <a href="/shop">Start shopping →</a></p>
+{% endif %}
+{% endblock %}

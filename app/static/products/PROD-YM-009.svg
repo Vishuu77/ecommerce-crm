@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" role="img" aria-label="Yoga Mat">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#eefcfb"/><stop offset="1" stop-color="#d5f4f1"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#g)"/>
+  <circle cx="200" cy="205" r="150" fill="#ffffff" opacity="0.55"/>
+  <rect x="120" y="150" width="200" height="34" rx="17" fill="#7c3aed"/>
+      <rect x="120" y="192" width="200" height="34" rx="17" fill="#a78bfa"/>
+      <rect x="120" y="234" width="200" height="34" rx="17" fill="#7c3aed"/>
+      <circle cx="300" cy="207" r="16" fill="#ede9fe"/>
+</svg>

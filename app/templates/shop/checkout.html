@@ -1,0 +1,34 @@
+{% extends "shop/base.html" %}
+{% block title %}Checkout{% endblock %}
+{% block body %}
+<h1>Checkout</h1>
+{% if error %}<div class="alert bad">{{ error }}</div>{% endif %}
+
+<div class="checkout">
+  <form method="post" action="/shop/checkout" class="coform">
+    <h2>Delivery details</h2>
+    <label>Full name<input type="text" value="{{ user.name }}" disabled></label>
+    <label>Email<input type="text" value="{{ user.email }}" disabled></label>
+    <label>Phone (for order updates)
+      <input type="text" name="phone" value="{{ user.phone }}" placeholder="+91XXXXXXXXXX"></label>
+    <label>Shipping address
+      <textarea name="address" rows="3" required placeholder="House, street, city, PIN"></textarea></label>
+
+    <h2>Payment</h2>
+    <div class="paymode">Mode: <strong>{{ pay_mode }}</strong></div>
+    <label class="radio"><input type="radio" name="pay" checked> Pay online (UPI / Card / Netbanking)</label>
+    <label class="radio"><input type="radio" name="pay"> Cash on Delivery</label>
+
+    <button type="submit" class="cta big">Place order &amp; pay ₹{{ "{:,.0f}".format(totals.total) }}</button>
+  </form>
+
+  <aside class="summary">
+    <h2>Order summary</h2>
+    {% for ci in items %}
+      <div class="srow"><span>{{ ci.product.name }} × {{ ci.qty }}</span>
+        <span>₹{{ "{:,.0f}".format(ci.product.price * ci.qty) }}</span></div>
+    {% endfor %}
+    <div class="srow total"><span>Total</span><span>₹{{ "{:,.0f}".format(totals.total) }}</span></div>
+  </aside>
+</div>
+{% endblock %}

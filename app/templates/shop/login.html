@@ -1,0 +1,15 @@
+{% extends "shop/base.html" %}
+{% block title %}Log in{% endblock %}
+{% block body %}
+<div class="authbox">
+  <h1>Welcome back</h1>
+  {% if error %}<div class="alert bad">{{ error }}</div>{% endif %}
+  <form method="post" action="/shop/login" class="authform">
+    <label>Email<input type="email" name="email" required></label>
+    <label>Password<input type="password" name="password" required></label>
+    <button type="submit" class="cta big">Log in</button>
+  </form>
+  <p class="muted">New here? <a href="/shop/register">Create an account</a></p>
+  <p class="muted">Demo login: vishnu@example.com / demo1234</p>
+</div>
+{% endblock %}

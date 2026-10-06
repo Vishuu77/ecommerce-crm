@@ -15,13 +15,16 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db, init_db, SessionLocal
 from app import crud, schemas, models, seed, policy
+from app.storefront import router as storefront_router
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 UPLOADS = os.path.join(BASE, "uploads")
 os.makedirs(UPLOADS, exist_ok=True)
 
-app = FastAPI(title="E-commerce CRM", version="1.0.0",
-              description="Products, Orders, and Returns/Tickets — local-first, cloud-ready.")
+app = FastAPI(title="E-commerce CRM", version="2.0.0",
+              description="Storefront + Staff CRM + Returns — local-first, cloud-ready.")
+
+app.include_router(storefront_router)
 
 app.mount("/static", StaticFiles(directory=os.path.join(BASE, "static")), name="static")
 app.mount("/uploads", StaticFiles(directory=UPLOADS), name="uploads")

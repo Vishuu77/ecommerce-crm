@@ -1,0 +1,17 @@
+{% extends "shop/base.html" %}
+{% block title %}Sign up{% endblock %}
+{% block body %}
+<div class="authbox">
+  <h1>Create your account</h1>
+  {% if error %}<div class="alert bad">{{ error }}</div>{% endif %}
+  <form method="post" action="/shop/register" class="authform">
+    <label>Full name<input type="text" name="name" required></label>
+    <label>Email<input type="email" name="email" required></label>
+    <label>Mobile number (for OTP)
+      <input type="tel" name="phone" placeholder="10-digit mobile" required></label>
+    <label>Password<input type="password" name="password" minlength="6" required></label>
+    <button type="submit" class="cta big">Sign up &amp; get OTP</button>
+  </form>
+  <p class="muted">Already have an account? <a href="/shop/login">Log in</a></p>
+</div>
+{% endblock %}

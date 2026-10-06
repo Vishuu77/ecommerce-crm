@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400" role="img" aria-label="Kurta">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff1f2"/><stop offset="1" stop-color="#ffe0e6"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" fill="url(#g)"/>
+  <circle cx="200" cy="205" r="150" fill="#ffffff" opacity="0.55"/>
+  <path d="M200 110 L150 140 L128 210 L160 220 L160 300 L240 300 L240 220 L272 210 L250 140 Z"
+            fill="#d9a86c"/>
+      <path d="M200 110 L182 132 L200 160 L218 132 Z" fill="#c8925a"/>
+      <circle cx="200" cy="180" r="4" fill="#a97a45"/><circle cx="200" cy="210" r="4" fill="#a97a45"/>
+</svg>
