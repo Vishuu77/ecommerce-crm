@@ -1,4 +1,4 @@
-"""Auth: password hashing, OTP, and signed session cookies (stdlib only).
+"""Auth: password hashing and signed session cookies (stdlib only).
 
 Kept dependency-free (hashlib/hmac/secrets) so it installs cleanly on Windows
 and any host — no bcrypt/itsdangerous build steps.
@@ -11,11 +11,7 @@ import os
 import secrets
 import time
 
-from datetime import datetime, timedelta
-
 SECRET = os.environ.get("APP_SECRET", "dev-secret-change-me-in-production")
-OTP_TTL_SECONDS = 300          # 5 minutes
-OTP_MAX_ATTEMPTS = 5
 SESSION_TTL_SECONDS = 60 * 60 * 24 * 14   # 14 days
 PBKDF2_ROUNDS = 200_000
 
@@ -37,23 +33,6 @@ def verify_password(password: str, stored: str) -> bool:
         return hmac.compare_digest(dk.hex(), hash_hex)
     except Exception:
         return False
-
-
-# ---------------------------------------------------------------- OTP
-def generate_otp() -> str:
-    return f"{secrets.randbelow(1_000_000):06d}"
-
-
-def hash_otp(code: str) -> str:
-    return hmac.new(SECRET.encode(), code.encode(), hashlib.sha256).hexdigest()
-
-
-def verify_otp_hash(code: str, stored_hash: str) -> bool:
-    return hmac.compare_digest(hash_otp(code), stored_hash)
-
-
-def otp_expiry() -> datetime:
-    return datetime.utcnow() + timedelta(seconds=OTP_TTL_SECONDS)
 
 
 # ---------------------------------------------------------------- sessions
@@ -92,35 +71,6 @@ def read_session(token: str | None) -> int | None:
             return None
         uid, exp = payload.decode().split(":")
         if int(exp) < time.time():
-            return None
-        return int(uid)
-    except Exception:
-        return None
-
-
-# ---------------------------------------------------------------- pending
-# Carries the just-registered user from /register to /verify. Looked up by
-# phone alone, two accounts sharing a number would collide and the OTP would
-# verify (and log in) the wrong user.
-PENDING_TTL_SECONDS = 900
-
-
-def make_pending(user_id: int) -> str:
-    exp = int(time.time()) + PENDING_TTL_SECONDS
-    return _sign(f"pending:{user_id}:{exp}".encode())
-
-
-def read_pending(token: str | None) -> int | None:
-    if not token:
-        return None
-    try:
-        payload_b64, mac_b64 = token.split(".")
-        payload, mac = _b64d(payload_b64), _b64d(mac_b64)
-        expected = hmac.new(SECRET.encode(), payload, hashlib.sha256).digest()
-        if not hmac.compare_digest(mac, expected):
-            return None
-        kind, uid, exp = payload.decode().split(":")
-        if kind != "pending" or int(exp) < time.time():
             return None
         return int(uid)
     except Exception:

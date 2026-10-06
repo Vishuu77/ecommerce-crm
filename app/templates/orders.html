@@ -21,15 +21,12 @@
     <select name="delivery_status">
       <option>Pending</option><option>Shipped</option><option>Delivered</option>
     </select>
-    <select name="payment_status">
-      <option>Paid</option><option>Refunded</option>
-    </select>
     <button type="submit">Save</button>
   </form>
 </details>
 
 <table>
-  <thead><tr><th>Order</th><th>Customer</th><th>Product</th><th>Ordered</th><th>Delivered</th><th>Status</th><th>Payment</th><th></th></tr></thead>
+  <thead><tr><th>Order</th><th>Customer</th><th>Product</th><th>Ordered</th><th>Delivered</th><th>Status</th><th></th></tr></thead>
   <tbody>
   {% for o in orders %}
     <tr>
@@ -39,7 +36,6 @@
       <td>{{ o.order_date.strftime('%Y-%m-%d') if o.order_date else '—' }}</td>
       <td>{{ o.delivery_date.strftime('%Y-%m-%d') if o.delivery_date else '—' }}</td>
       <td><span class="pill {{ o.delivery_status | lower }}">{{ o.delivery_status }}</span></td>
-      <td>{{ o.payment_status }}</td>
       <td>
         {% if o.delivery_status != 'Delivered' %}
         <form method="post" action="/ui/orders/{{ o.order_id }}/deliver">
@@ -48,7 +44,7 @@
         {% endif %}
       </td>
     </tr>
-  {% else %}<tr><td colspan="8" class="muted">No orders.</td></tr>{% endfor %}
+  {% else %}<tr><td colspan="7" class="muted">No orders.</td></tr>{% endfor %}
   </tbody>
 </table>
 {% endblock %}

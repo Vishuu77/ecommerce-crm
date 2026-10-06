@@ -29,7 +29,6 @@ class OrderBase(BaseModel):
     order_date: datetime | None = None
     delivery_date: datetime | None = None
     delivery_status: str = "Pending"
-    payment_status: str = "Paid"
 
 
 class OrderIn(OrderBase):

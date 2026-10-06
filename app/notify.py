@@ -18,24 +18,6 @@ WA_TOKEN = os.environ.get("WA_TOKEN", "")            # Meta Cloud API
 WA_PHONE_ID = os.environ.get("WA_PHONE_ID", "")
 
 
-def dev_otp_enabled() -> bool:
-    """Whether to surface OTPs in the UI / a dev cookie.
-
-    Production-safe default: off whenever a real WhatsApp channel is
-    configured, because an exposed OTP lets anyone take over an account.
-    `DEV_OTP` overrides explicitly (`1`/`true` on, `0`/`false` off).
-
-    Reads os.environ live (not the module constants, which are captured at
-    import) so tests and late env changes behave predictably.
-    """
-    raw = os.environ.get("DEV_OTP")
-    if raw is not None:
-        return raw.strip().lower() in ("1", "true", "yes", "on")
-    has_cloud = bool(os.environ.get("WA_TOKEN")) and bool(os.environ.get("WA_PHONE_ID"))
-    has_bridge = bool(os.environ.get("WA_BRIDGE_URL"))
-    return not has_cloud and not has_bridge
-
-
 def _log(db: Session, channel, to, kind, body, status, error="", order_id=""):
     n = models.Notification(channel=channel, to=to, kind=kind, body=body,
                             status=status, error=error, order_id=order_id)
@@ -87,10 +69,10 @@ def send_whatsapp(db: Session, to: str, body: str, kind: str = "", order_id: str
 
 
 def notify_order(db: Session, order, kind: str = "order"):
-    """Send an order/payment status update to the customer."""
+    """Send an order status update to the customer."""
     to = getattr(order, "customer_phone", "") or ""
     lines = [f"Hi {order.customer_name},",
-             f"Order {order.order_id}: {order.delivery_status} / Payment: {order.payment_status}"]
+             f"Order {order.order_id}: {order.delivery_status}"]
     if getattr(order, "total_amount", 0):
         lines.append(f"Total: Rs.{order.total_amount:.0f}")
     lines.append("Track: /portal/track?order_id=" + order.order_id)

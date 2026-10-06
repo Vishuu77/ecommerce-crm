@@ -43,7 +43,7 @@ def run_with_testclient():
     # order CRUD
     from datetime import datetime, timedelta
     o = {"order_id": "ORD-TST-1", "customer_name": "Tester", "customer_email": "t@x.com",
-         "product_id": "PROD-EAR-001", "delivery_status": "Delivered", "payment_status": "Paid",
+         "product_id": "PROD-EAR-001", "delivery_status": "Delivered",
          "delivery_date": (datetime.utcnow() - timedelta(days=3)).isoformat()}
     ck("create order", c.post("/api/orders", json=o).status_code == 201)
     ck("get order", c.get("/api/orders/ORD-TST-1").json()["customer_name"] == "Tester")

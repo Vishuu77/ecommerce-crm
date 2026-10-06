@@ -53,23 +53,22 @@ def seed(db: Session):
     if db.query(models.User).count() == 0:
         db.add(models.User(name="Vishnu", email="vishnu@example.com",
                            phone="+919000000000",
-                           password_hash=auth.hash_password("demo1234"),
-                           phone_verified=True))
+                           password_hash=auth.hash_password("demo1234")))
 
     if db.query(models.Order).count() == 0:
         now = datetime.utcnow()
         db.add(models.Order(
             order_id="ORD-98231", customer_name="Vishnu",
-            customer_email="vishnu@example.com", customer_phone="+916361222162",
+            customer_email="vishnu@example.com", customer_phone="+919000000000",
             product_id="PROD-EAR-001", order_date=now - timedelta(days=8),
             delivery_date=now - timedelta(days=3), delivery_status="Delivered",
-            payment_status="Paid", total_amount=2499.0,
+            total_amount=2499.0,
             shipping_address="12 MG Road, Bengaluru 560001"))
         db.add(models.Order(
             order_id="ORD-98232", customer_name="Priya",
             customer_email="priya@example.com", product_id="PROD-SW-002",
             order_date=now - timedelta(days=2), delivery_date=None,
-            delivery_status="Shipped", payment_status="Paid", total_amount=3999.0))
+            delivery_status="Shipped", total_amount=3999.0))
 
     if db.query(models.Ticket).count() == 0:
         db.add(models.Ticket(

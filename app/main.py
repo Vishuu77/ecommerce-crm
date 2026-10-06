@@ -199,13 +199,13 @@ def ui_orders(request: Request, q: str | None = None, db: Session = Depends(get_
 @app.post("/ui/orders")
 def ui_create_order(order_id: str = Form(...), customer_name: str = Form(...),
                     customer_email: str = Form(""), product_id: str = Form(""),
-                    delivery_status: str = Form("Pending"), payment_status: str = Form("Paid"),
+                    delivery_status: str = Form("Pending"),
                     db: Session = Depends(get_db)):
     if not crud.get_order(db, order_id):
         crud.create_order(db, schemas.OrderIn(
             order_id=order_id, customer_name=customer_name, customer_email=customer_email,
             product_id=product_id or None, delivery_status=delivery_status,
-            payment_status=payment_status, order_date=datetime.utcnow()))
+            order_date=datetime.utcnow()))
     return RedirectResponse("/ui/orders", status_code=303)
 
 

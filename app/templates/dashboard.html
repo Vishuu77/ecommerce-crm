@@ -14,7 +14,7 @@
 
 <h2>Recent Orders</h2>
 <table>
-  <thead><tr><th>Order</th><th>Customer</th><th>Product</th><th>Status</th><th>Payment</th></tr></thead>
+  <thead><tr><th>Order</th><th>Customer</th><th>Product</th><th>Status</th></tr></thead>
   <tbody>
   {% for o in orders %}
     <tr>
@@ -22,9 +22,8 @@
       <td>{{ o.customer_name }}</td>
       <td>{{ o.product.name if o.product else '—' }}</td>
       <td><span class="pill {{ o.delivery_status | lower }}">{{ o.delivery_status }}</span></td>
-      <td>{{ o.payment_status }}</td>
     </tr>
-  {% else %}<tr><td colspan="5" class="muted">No orders yet.</td></tr>{% endfor %}
+  {% else %}<tr><td colspan="4" class="muted">No orders yet.</td></tr>{% endfor %}
   </tbody>
 </table>
 

@@ -1,8 +1,5 @@
-"""Auth/notify/payment unit tests."""
-import time
-from datetime import datetime, timedelta
-
-from app import auth, notify, payments
+"""Auth and notification unit tests."""
+from app import auth, notify
 
 
 def test_password_hash_roundtrip():
@@ -20,13 +17,6 @@ def test_phone_normalisation():
     assert auth.normalise_phone("+91 63612 22162") == "+916361222162"
     assert auth.normalise_phone("916361222162") == "+916361222162"
     assert auth.normalise_phone("06361222162") == "+916361222162"
-
-
-def test_otp_hash_verify():
-    code = auth.generate_otp()
-    h = auth.hash_otp(code)
-    assert auth.verify_otp_hash(code, h)
-    assert not auth.verify_otp_hash("000000", h) or code == "000000"
 
 
 def test_session_roundtrip():
@@ -49,37 +39,6 @@ def test_session_survives_mac_containing_separator():
     """
     for uid in range(2000):
         assert auth.read_session(auth.make_session(uid)) == uid
-
-
-def test_payments_simulate_mode():
-    assert not payments.live()
-    o = payments.create_order(2499.0, "ORD-TEST")
-    assert o["provider"] == "simulate" and o["amount"] == 249900
-    assert payments.verify_signature("a", "b", "anything") is True   # simulate passes
-
-
-def test_dev_otp_disabled_when_whatsapp_configured(monkeypatch):
-    """An exposed OTP lets anyone take over an account — must be off in prod."""
-    from app import notify
-    monkeypatch.delenv("DEV_OTP", raising=False)
-    monkeypatch.delenv("WA_BRIDGE_URL", raising=False)
-    monkeypatch.setenv("WA_TOKEN", "EAAGtest")
-    monkeypatch.setenv("WA_PHONE_ID", "123456")
-    assert notify.dev_otp_enabled() is False
-    # explicit override wins
-    monkeypatch.setenv("DEV_OTP", "1")
-    assert notify.dev_otp_enabled() is True
-    monkeypatch.setenv("DEV_OTP", "0")
-    assert notify.dev_otp_enabled() is False
-
-
-def test_dev_otp_on_with_no_channel(monkeypatch):
-    from app import notify
-    monkeypatch.delenv("DEV_OTP", raising=False)
-    monkeypatch.delenv("WA_BRIDGE_URL", raising=False)
-    monkeypatch.delenv("WA_TOKEN", raising=False)
-    monkeypatch.delenv("WA_PHONE_ID", raising=False)
-    assert notify.dev_otp_enabled() is True
 
 
 def test_whatsapp_falls_back_to_simulated(client):

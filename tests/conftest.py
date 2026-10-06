@@ -12,9 +12,9 @@ from app.main import app                        # noqa: E402
 from app.database import init_db, SessionLocal, engine  # noqa: E402
 from app import seed, models                    # noqa: E402
 
-# every table, so no state survives a run (User/OTP/CartItem included)
-_TABLES = (models.CartItem, models.OrderItem, models.Payment, models.Notification,
-           models.OTP, models.Ticket, models.Order, models.User, models.Product)
+# every table, so no state survives a run (User/CartItem included)
+_TABLES = (models.CartItem, models.OrderItem, models.Notification,
+           models.Ticket, models.Order, models.User, models.Product)
 
 
 def _wipe(db):

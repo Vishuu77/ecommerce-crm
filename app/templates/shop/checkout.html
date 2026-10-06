@@ -14,12 +14,7 @@
     <label>Shipping address
       <textarea name="address" rows="3" required placeholder="House, street, city, PIN"></textarea></label>
 
-    <h2>Payment</h2>
-    <div class="paymode">Mode: <strong>{{ pay_mode }}</strong></div>
-    <label class="radio"><input type="radio" name="pay" checked> Pay online (UPI / Card / Netbanking)</label>
-    <label class="radio"><input type="radio" name="pay"> Cash on Delivery</label>
-
-    <button type="submit" class="cta big">Place order &amp; pay ₹{{ "{:,.0f}".format(totals.total) }}</button>
+    <button type="submit" class="cta big">Place order · ₹{{ "{:,.0f}".format(totals.total) }}</button>
   </form>
 
   <aside class="summary">

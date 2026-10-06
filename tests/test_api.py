@@ -39,7 +39,6 @@ def test_stock_status(client):
 def test_order_crud_and_days_since_delivery(client):
     o = {"order_id": "ORD-T1", "customer_name": "T", "customer_email": "t@x.com",
          "product_id": "PROD-EAR-001", "delivery_status": "Delivered",
-         "payment_status": "Paid",
          "delivery_date": (datetime.utcnow() - timedelta(days=3)).isoformat()}
     assert client.post("/api/orders", json=o).status_code == 201
     got = client.get("/api/orders/ORD-T1").json()

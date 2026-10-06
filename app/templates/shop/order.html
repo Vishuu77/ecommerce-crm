@@ -3,7 +3,6 @@
 {% block body %}
 <h1>Order {{ order.order_id }}</h1>
 <div class="orderstatus">
-  <span class="pill {{ order.payment_status | lower }}">Payment: {{ order.payment_status }}</span>
   <span class="pill {{ order.delivery_status | lower }}">Delivery: {{ order.delivery_status }}</span>
 </div>
 
@@ -26,10 +25,6 @@
   <p>{{ order.customer_name }}<br>{{ order.shipping_address }}</p>
   <p class="muted">Updates sent to {{ order.customer_phone or order.customer_email }}</p>
 </div>
-
-{% if order.payment_status != 'Paid' %}
-  <a class="cta big" href="/shop/pay/{{ order.order_id }}">Complete payment →</a>
-{% endif %}
 
 <div class="orderbox">
   <h2>Notifications</h2>

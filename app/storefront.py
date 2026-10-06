@@ -1,26 +1,25 @@
-"""Storefront: register/login + OTP, browse, cart, checkout, orders, payment.
+"""Storefront: register/login, browse, cart, checkout, orders.
 
-Customer-facing routes under /shop and /account. Server-side cart (authoritative
-prices), transactional stock decrement, and order/payment status.
+Customer-facing routes under /shop. Server-side cart (authoritative prices) and
+transactional stock decrement. No payment step — checkout places the order.
 """
 from __future__ import annotations
 import os
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, Request, Form, HTTPException
-from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app import models, auth, notify, payments
+from app import models, auth, notify
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 templates = Jinja2Templates(directory=os.path.join(BASE, "templates"))
 
 router = APIRouter()
 SESSION_COOKIE = "shop_session"
-OTP_COOKIE = "pending_user"       # signed handle: register -> verify
 
 
 # ---------------------------------------------------------------- helpers
@@ -74,70 +73,13 @@ def register(request: Request, name: str = Form(...), email: str = Form(...),
         return _render(request, "shop/register.html", error=error, cart_count=0)
 
     user = models.User(name=name.strip(), email=email, phone=phone_e164,
-                       password_hash=auth.hash_password(password), phone_verified=False)
+                       password_hash=auth.hash_password(password))
     db.add(user); db.commit(); db.refresh(user)
 
-    # issue OTP to the phone
-    code = auth.generate_otp()
-    db.add(models.OTP(phone=phone_e164, code_hash=auth.hash_otp(code),
-                      purpose="verify", expires_at=auth.otp_expiry()))
-    db.commit()
-    notify.send_whatsapp(db, phone_e164,
-                         f"Your verification OTP is {code}. Valid 5 minutes.",
-                         kind="otp")
-
-    resp = RedirectResponse(f"/shop/verify?phone={phone_e164}", status_code=303)
-    # signed handle to *this* registration, so /verify can't land on another
-    # account that shares the number
-    resp.set_cookie(OTP_COOKIE, auth.make_pending(user.id), max_age=900, httponly=True)
-    # dev convenience only — never expose an OTP in production
-    if notify.dev_otp_enabled():
-        resp.set_cookie("dev_otp", code, max_age=900, httponly=True)
-    return resp
-
-
-@router.get("/shop/verify", response_class=HTMLResponse)
-def verify_page(request: Request, phone: str = "", db: Session = Depends(get_db)):
-    return _render(request, "shop/verify.html", phone=phone,
-                   dev_otp=request.cookies.get("dev_otp", "") if notify.dev_otp_enabled() else "",
-                   cart_count=0)
-
-
-@router.post("/shop/verify", response_class=HTMLResponse)
-def verify(request: Request, phone: str = Form(...), code: str = Form(...),
-           db: Session = Depends(get_db)):
-    phone_e164 = auth.normalise_phone(phone)
-    uid = auth.read_pending(request.cookies.get(OTP_COOKIE))
-    user = db.get(models.User, uid) if uid else None
-    otp = (db.query(models.OTP)
-           .filter(models.OTP.phone == phone_e164, models.OTP.consumed == False)  # noqa: E712
-           .order_by(models.OTP.created_at.desc()).first())
-    error = None
-    if not user or user.phone != phone_e164:
-        error = "Your verification session expired. Please register again."
-    elif not otp:
-        error = "No OTP request found for that number."
-    elif otp.expires_at < datetime.utcnow():
-        error = "OTP expired. Please request a new one."
-    elif otp.attempts >= auth.OTP_MAX_ATTEMPTS:
-        error = "Too many attempts. Request a new OTP."
-    elif not auth.verify_otp_hash(code.strip(), otp.code_hash):
-        otp.attempts += 1; db.commit()
-        error = "Incorrect OTP."
-    if error:
-        return _render(request, "shop/verify.html", phone=phone_e164, error=error,
-                       dev_otp=request.cookies.get("dev_otp", "") if notify.dev_otp_enabled() else "",
-                       cart_count=0)
-
-    otp.consumed = True
-    user.phone_verified = True
-    db.commit()
-
+    # account is active immediately — sign the customer in
     resp = RedirectResponse("/shop", status_code=303)
     resp.set_cookie(SESSION_COOKIE, auth.make_session(user.id),
                     max_age=auth.SESSION_TTL_SECONDS, httponly=True, samesite="lax")
-    resp.delete_cookie(OTP_COOKIE)
-    resp.delete_cookie("dev_otp")
     return resp
 
 
@@ -292,7 +234,7 @@ def checkout_page(request: Request, db: Session = Depends(get_db)):
     if not items:
         return RedirectResponse("/shop/cart", status_code=303)
     return _render(request, "shop/checkout.html", items=items, totals=cart_totals(items),
-                   user=user, cart_count=cart_count(db, user), pay_mode=payments.mode())
+                   user=user, cart_count=cart_count(db, user))
 
 
 @router.post("/shop/checkout")
@@ -305,13 +247,13 @@ def checkout(request: Request, address: str = Form(...), phone: str = Form(""),
     if not items:
         return RedirectResponse("/shop/cart", status_code=303)
 
-    # ---- validate stock atomically-ish and build the order
+    # ---- validate stock, then build the order
     total = 0.0
     for ci in items:
         if not ci.product or ci.product.stock_qty < ci.qty:
             return _render(request, "shop/checkout.html", items=items,
                            totals=cart_totals(items), user=user,
-                           cart_count=cart_count(db, user), pay_mode=payments.mode(),
+                           cart_count=cart_count(db, user),
                            error=f"{ci.product.name if ci.product else 'An item'} "
                                  f"is out of stock for the requested quantity.")
 
@@ -320,7 +262,7 @@ def checkout(request: Request, address: str = Form(...), phone: str = Form(""),
         user_id=user.id, customer_name=user.name, customer_email=user.email,
         customer_phone=auth.normalise_phone(phone) or user.phone,
         shipping_address=address, order_date=datetime.utcnow(),
-        delivery_status="Pending", payment_status="Pending")
+        delivery_status="Pending")
 
     for ci in items:
         line = ci.product.price * ci.qty
@@ -340,58 +282,8 @@ def checkout(request: Request, address: str = Form(...), phone: str = Form(""),
     db.commit()
     db.refresh(order)
 
-    # create a payment intent
-    pay = payments.create_order(order.total_amount, order.order_id)
-    db.add(models.Payment(order_id=order.order_id, provider=pay["provider"],
-                          provider_order_id=pay["id"], amount=order.total_amount,
-                          status="created"))
-    db.commit()
     notify.notify_order(db, order, kind="order")
-    return RedirectResponse(f"/shop/pay/{order.order_id}", status_code=303)
-
-
-# ---------------------------------------------------------------- payment
-@router.get("/shop/pay/{order_id}", response_class=HTMLResponse)
-def pay_page(order_id: str, request: Request, db: Session = Depends(get_db)):
-    user = current_user(request, db)
-    order = db.get(models.Order, order_id)
-    if not order or (user and order.user_id != user.id):
-        raise HTTPException(404, "order not found")
-    pay = db.query(models.Payment).filter(models.Payment.order_id == order_id).first()
-    return _render(request, "shop/pay.html", order=order, pay=pay, user=user,
-                   key_id=payments.KEY_ID, live=payments.live(),
-                   cart_count=cart_count(db, user))
-
-
-@router.post("/shop/pay/{order_id}/confirm", response_class=HTMLResponse)
-def pay_confirm(order_id: str, request: Request,
-                razorpay_payment_id: str = Form(""),
-                razorpay_order_id: str = Form(""),
-                razorpay_signature: str = Form(""),
-                db: Session = Depends(get_db)):
-    order = db.get(models.Order, order_id)
-    if not order:
-        raise HTTPException(404, "order not found")
-    pay = db.query(models.Payment).filter(models.Payment.order_id == order_id).first()
-
-    ok = payments.verify_signature(razorpay_order_id or (pay.provider_order_id if pay else ""),
-                                   razorpay_payment_id or ("sim_" + order_id),
-                                   razorpay_signature)
-    if ok:
-        order.payment_status = "Paid"
-        if pay:
-            pay.status = "paid"
-            pay.provider_payment_id = razorpay_payment_id or pay.provider_order_id
-        db.commit()
-        notify.notify_order(db, order, kind="payment")
-        return RedirectResponse(f"/shop/order/{order_id}", status_code=303)
-
-    order.payment_status = "Failed"
-    if pay:
-        pay.status = "failed"
-    db.commit()
-    notify.notify_order(db, order, kind="payment")
-    return RedirectResponse(f"/shop/pay/{order_id}", status_code=303)
+    return RedirectResponse(f"/shop/order/{order.order_id}", status_code=303)
 
 
 # ---------------------------------------------------------------- orders
@@ -412,9 +304,8 @@ def order_detail(order_id: str, request: Request, db: Session = Depends(get_db))
     order = db.get(models.Order, order_id)
     if not order or (user and order.user_id != user.id):
         raise HTTPException(404, "order not found")
-    pay = db.query(models.Payment).filter(models.Payment.order_id == order_id).first()
     notifs = (db.query(models.Notification)
               .filter(models.Notification.order_id == order_id)
               .order_by(models.Notification.created_at.desc()).all())
-    return _render(request, "shop/order.html", order=order, pay=pay, notifs=notifs,
+    return _render(request, "shop/order.html", order=order, notifs=notifs,
                    user=user, cart_count=cart_count(db, user))

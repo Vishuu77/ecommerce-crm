@@ -20,8 +20,8 @@ Part of the **Return & Refund Harness** roadmap (`Harness project.docx`).
 **Storefront (ShopKart)** — what a customer buys from
 - `/shop` — catalog: search, category, price filter, sort, ratings, discounts
 - `/shop/product/{id}` — detail page with related products
-- `/shop/cart` → `/shop/checkout` → `/shop/pay/{order}` → `/shop/order/{order}`
-- `/shop/register` → OTP → verified account; `/shop/orders` order history
+- `/shop/cart` → `/shop/checkout` → `/shop/order/{order}` (order placed directly)
+- `/shop/register` — instant account + sign-in; `/shop/orders` order history
 
 **Staff / Admin CRM** — manage everything
 - `/` dashboard, `/ui/products`, `/ui/orders`, `/ui/tickets`
@@ -34,12 +34,11 @@ Part of the **Return & Refund Harness** roadmap (`Harness project.docx`).
 
 ### How a customer buys
 1. `/shop` — browse, filter, sort; add items to a server-side cart.
-2. `/shop/register` — name, email, mobile. An **OTP is sent to that mobile**
-   (WhatsApp). Verify it and the account is active and logged in.
-3. `/shop/checkout` — delivery address + phone, stock validated and decremented
-   in one transaction.
-4. `/shop/pay/{order}` — Razorpay (UPI / cards / netbanking). Without keys the
-   app runs in **simulate mode** so the full paid flow is demonstrable.
+2. `/shop/register` — name, email, mobile, password. The account is active
+   immediately and the customer is signed in.
+3. `/shop/checkout` — delivery address + phone. Stock is validated and
+   decremented in one transaction, then the order is created.
+4. `/shop/order/{id}` — confirmation with items, total and delivery status.
 5. Order status updates are pushed to the customer's mobile over WhatsApp.
 
 ### How a customer gets a replacement
@@ -79,7 +78,7 @@ The database (`app/crm.db`) is created and seeded automatically on first start.
 ## Test
 
 ```bash
-python -m pytest              # 50 tests: API + policy + portal + auth + storefront
+python -m pytest              # 54 tests: API + policy + portal + auth + storefront
 ```
 
 ## Environment variables
@@ -87,8 +86,7 @@ python -m pytest              # 50 tests: API + policy + portal + auth + storefr
 | Var | Purpose |
 |---|---|
 | `DATABASE_URL` | `sqlite:///...` (default) or `postgresql+psycopg://...` |
-| `APP_SECRET` | session/OTP signing key — **set this in production** |
-| `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` | live payments; omit for simulate mode |
+| `APP_SECRET` | session signing key — **set this in production** |
 | `WA_BRIDGE_URL` | local WhatsApp bridge (default `http://127.0.0.1:8765`) |
 | `WA_TOKEN` / `WA_PHONE_ID` | Meta WhatsApp Cloud API (alternative to the bridge) |
 
@@ -134,24 +132,19 @@ docker run -p 8000:8000 ecommerce-crm
 ```
 Products     (product_id PK, name, category, price, mrp, rating, review_count,
               stock_qty, return_window_days, description, image_url, active)
-Users        (id PK, name, email UNIQUE, phone UNIQUE, password_hash,
-              phone_verified, created_at)
-OTP          (id PK, phone, code_hash, purpose, expires_at, attempts, consumed)
+Users        (id PK, name, email UNIQUE, phone UNIQUE, password_hash, created_at)
 CartItem     (id PK, user_id FK, product_id FK, qty)  — UNIQUE(user, product)
 Orders       (order_id PK, user_id FK, customer_name, customer_email,
               customer_phone, shipping_address, order_date, delivery_date,
-              delivery_status, payment_status, total_amount)
+              delivery_status, total_amount)
 OrderItem    (id PK, order_id FK, product_id FK, name, unit_price, qty, line_total)
-Payment      (id PK, order_id FK, provider, provider_order_id,
-              provider_payment_id, amount, currency, status)
 Tickets      (ticket_id PK, order_id FK, customer_claim, proof_url,
               agent_decision, policy_checks, status, updated_at)
 Notification (id PK, channel, to, kind, body, status, error, order_id, created_at)
 ```
 
 Note: SQLite is created with `create_all` on startup — there are no migrations.
-For an existing DB, add the new `products` columns (`mrp`, `rating`,
-`review_count`) manually or delete `app/crm.db` to reseed.
+If you have an older `app/crm.db`, delete it to pick up schema changes and reseed.
 
 ## Stack
 
