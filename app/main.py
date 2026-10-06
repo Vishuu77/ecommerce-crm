@@ -14,7 +14,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.database import get_db, init_db, SessionLocal
-from app import crud, schemas, models, seed
+from app import crud, schemas, models, seed, policy
 
 BASE = os.path.dirname(os.path.abspath(__file__))
 UPLOADS = os.path.join(BASE, "uploads")
@@ -253,3 +253,74 @@ def ui_ticket_status(ticket_id: str, status: str = Form(...), db: Session = Depe
         t.updated_at = datetime.utcnow()
         db.commit()
     return RedirectResponse("/ui/tickets", status_code=303)
+
+
+# ============================================================ CUSTOMER PORTAL
+def _render(request, name, **ctx):
+    return templates.TemplateResponse(request, name, ctx)
+
+
+@app.get("/portal", response_class=HTMLResponse)
+def portal_home(request: Request):
+    return _render(request, "portal_home.html")
+
+
+@app.get("/portal/order", response_class=HTMLResponse)
+def portal_order(request: Request, order_id: str | None = None,
+                 db: Session = Depends(get_db)):
+    """Customer looks up their order by Order ID (roadmap: real-time input)."""
+    order = crud.get_order(db, order_id) if order_id else None
+    product = crud.get_product(db, order.product_id) if order and order.product_id else None
+    tickets = db.query(models.Ticket).filter(models.Ticket.order_id == order_id).all() if order else []
+    return _render(request, "portal_order.html", order=order, product=product,
+                   order_id=order_id or "", tickets=tickets,
+                   found=bool(order_id), claim_types=policy.CLAIM_TYPES)
+
+
+@app.post("/portal/order/request", response_class=HTMLResponse)
+async def portal_request(request: Request, order_id: str = Form(...),
+                         claim_type: str = Form("damaged"),
+                         customer_claim: str = Form(""),
+                         proof: UploadFile | None = File(None),
+                         db: Session = Depends(get_db)):
+    """Raise a return/replacement request; runs the policy engine."""
+    order = crud.get_order(db, order_id)
+    product = crud.get_product(db, order.product_id) if order and order.product_id else None
+
+    proof_url = None
+    if proof is not None and proof.filename:
+        safe = f"{datetime.utcnow().strftime('%Y%m%d%H%M%S')}_{os.path.basename(proof.filename)}"
+        with open(os.path.join(UPLOADS, safe), "wb") as f:
+            f.write(await proof.read())
+        proof_url = f"/uploads/{safe}"
+
+    result = policy.check_policy(order, claim_type, bool(proof_url), product)
+
+    ticket = None
+    if order is not None and result.status in ("ELIGIBLE", "NEEDS_PROOF"):
+        n = db.query(models.Ticket).count() + 501
+        tid = f"TCK-{n}"
+        while crud.get_ticket(db, tid):
+            n += 1
+            tid = f"TCK-{n}"
+        decision = {"ELIGIBLE": f"{result.remedy} Approved", "NEEDS_PROOF": "Pending proof",
+                    "NOT_ELIGIBLE": "Rejected"}[result.status]
+        ticket = crud.create_ticket(db, schemas.TicketIn(
+            ticket_id=tid, order_id=order_id,
+            customer_claim=f"[{claim_type}] {customer_claim}".strip(),
+            proof_url=proof_url, agent_decision=decision,
+            policy_checks=result.summary,
+            status="Resolved" if result.status == "ELIGIBLE" else "In-Progress"))
+
+    return _render(request, "portal_result.html", order=order, product=product,
+                   result=result, ticket=ticket, claim_type=claim_type)
+
+
+@app.get("/portal/track", response_class=HTMLResponse)
+def portal_track(request: Request, order_id: str | None = None, db: Session = Depends(get_db)):
+    """Track a request by Order ID."""
+    order = crud.get_order(db, order_id) if order_id else None
+    tickets = db.query(models.Ticket).filter(models.Ticket.order_id == order_id).all() if order else []
+    return _render(request, "portal_track.html", order=order, tickets=tickets,
+                   order_id=order_id or "", found=bool(order_id))
+

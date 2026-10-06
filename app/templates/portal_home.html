@@ -1,0 +1,31 @@
+{% extends "portal_base.html" %}
+{% block title %}Store Support{% endblock %}
+{% block body %}
+<section class="hero">
+  <h1>Returns &amp; Replacements</h1>
+  <p>Enter your Order ID to raise a replacement or refund request, or track an existing one.</p>
+</section>
+
+<div class="cards2">
+  <a class="bigcard" href="/portal/order">
+    <div class="ico">📦</div>
+    <h2>My Order</h2>
+    <p>Look up an order and request a replacement or refund.</p>
+  </a>
+  <a class="bigcard" href="/portal/track">
+    <div class="ico">🔎</div>
+    <h2>Track Request</h2>
+    <p>Check the status of a request you already raised.</p>
+  </a>
+</div>
+
+<div class="policybox">
+  <h3>Our policy at a glance</h3>
+  <ul>
+    <li><strong>Damaged / defective on arrival:</strong> report within 48–72 hours.</li>
+    <li><strong>Standard returns:</strong> within 7 days of delivery.</li>
+    <li><strong>Proof required:</strong> a clear photo or short video of the product &amp; packaging.</li>
+    <li><strong>Remedy order:</strong> free replacement first; refund only if replacement is unavailable.</li>
+  </ul>
+</div>
+{% endblock %}

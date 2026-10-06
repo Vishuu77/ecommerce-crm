@@ -1,0 +1,62 @@
+{% extends "portal_base.html" %}
+{% block title %}My Order{% endblock %}
+{% block body %}
+<h1>Find your order</h1>
+<form method="get" action="/portal/order" class="searchbar">
+  <input type="text" name="order_id" placeholder="Order ID, e.g. ORD-98231" value="{{ order_id }}" required>
+  <button type="submit">Look up</button>
+</form>
+
+{% if found and not order %}
+  <div class="alert bad">No order found for <code>{{ order_id }}</code>. Check the ID and try again.</div>
+{% endif %}
+
+{% if order %}
+  <div class="orderbox">
+    <h2>Order {{ order.order_id }}</h2>
+    <table class="kv">
+      <tr><th>Customer</th><td>{{ order.customer_name }}</td></tr>
+      <tr><th>Product</th><td>{{ product.name if product else '—' }}
+          {% if product %}<code>{{ product.product_id }}</code>{% endif %}</td></tr>
+      <tr><th>Ordered</th><td>{{ order.order_date.strftime('%d %b %Y') if order.order_date else '—' }}</td></tr>
+      <tr><th>Delivered</th><td>{{ order.delivery_date.strftime('%d %b %Y') if order.delivery_date else '—' }}</td></tr>
+      <tr><th>Status</th><td><span class="pill {{ order.delivery_status|lower }}">{{ order.delivery_status }}</span></td></tr>
+      <tr><th>Return window</th><td>{{ product.return_window_days if product else 7 }} days</td></tr>
+    </table>
+  </div>
+
+  {% if order.delivery_status == 'Delivered' %}
+  <div class="orderbox">
+    <h2>Raise a request</h2>
+    <form method="post" action="/portal/order/request" enctype="multipart/form-data" class="stack">
+      <input type="hidden" name="order_id" value="{{ order.order_id }}">
+      <label>What went wrong?
+        <select name="claim_type">
+          {% for c in claim_types %}<option value="{{ c }}">{{ c | replace('_',' ') | title }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Describe the issue
+        <textarea name="customer_claim" rows="3" placeholder="e.g. Left earbud cracked on arrival"></textarea>
+      </label>
+      <label>Upload proof (photo / short video)
+        <input type="file" name="proof" accept="image/*,video/*">
+      </label>
+      <button type="submit">Submit request</button>
+    </form>
+  </div>
+  {% else %}
+    <div class="alert">You can raise a return once this order is marked <strong>Delivered</strong>.</div>
+  {% endif %}
+
+  {% if tickets %}
+  <div class="orderbox">
+    <h2>Existing requests</h2>
+    <table>
+      <thead><tr><th>Ticket</th><th>Decision</th><th>Status</th></tr></thead>
+      <tbody>{% for t in tickets %}<tr><td><code>{{ t.ticket_id }}</code></td>
+        <td>{{ t.agent_decision }}</td><td>{{ t.status }}</td></tr>{% endfor %}</tbody>
+    </table>
+  </div>
+  {% endif %}
+{% endif %}
+{% endblock %}

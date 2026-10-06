@@ -15,28 +15,56 @@ Part of the **Return & Refund Harness** roadmap (`Harness project.docx`).
 - **Admin UI** — dark-themed server-rendered pages at `/`
 - **Cloud-ready** — one `DATABASE_URL` env var switches SQLite → Postgres
 
+## Two interfaces
+
+**Staff / Admin CRM** — manage everything
+- `/` dashboard, `/ui/products`, `/ui/orders`, `/ui/tickets`
+- Full CRUD REST API at `/api/*`, docs at `/docs`
+
+**Customer Portal** — what a buyer uses
+- `/portal` — home + policy summary
+- `/portal/order` — look up an order by Order ID, raise a replacement/refund request
+- `/portal/track` — track a request's status
+
+### How a customer gets a replacement
+1. Open `/portal/order`, enter the Order ID (e.g. `ORD-98231`).
+2. Pick what went wrong (damaged / defective / wrong item / not needed).
+3. Describe the issue and upload proof (photo or short video).
+4. The policy engine checks it instantly:
+   - delivered? · inside the return window? · DOA (48–72h)? · proof attached?
+   - **Replacement approved** if in stock, **refund** if out of stock.
+5. A ticket is created and visible to staff; the customer tracks it at `/portal/track`.
+
+## Return policy (enforced in code — `app/policy.py`)
+
+| Rule | Value |
+|---|---|
+| DOA (damaged/defective on arrival) | report within 48–72 hours |
+| Standard return window | 7 days from delivery (per product) |
+| Proof | photo/video required |
+| Remedy priority | replacement first, refund only if out of stock |
+| Refund timing | 5–7 business days to original payment method |
+
 ## Run locally
 
 ```bash
 cd ecommerce-crm
-python -m venv .venv && .venv\Scripts\activate      # Windows
 pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
 Open:
-- Admin UI  → http://127.0.0.1:8000/
-- API docs  → http://127.0.0.1:8000/docs
-- Health    → http://127.0.0.1:8000/health
+- Customer portal → http://127.0.0.1:8000/portal
+- Staff CRM       → http://127.0.0.1:8000/
+- API docs        → http://127.0.0.1:8000/docs
 
 The database (`app/crm.db`) is created and seeded automatically on first start.
 
 ## Test
 
 ```bash
-python -m pytest              # 8 tests: API CRUD + validation + UI render
-python test_api.py            # 20-check smoke test via TestClient
-python test_api.py --live     # hit a running server on :8000
+python -m pytest              # 25 tests: API + policy engine + customer portal
+python test_api.py            # 20-check smoke test
 ```
 
 ## API

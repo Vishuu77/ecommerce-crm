@@ -1,0 +1,39 @@
+{% extends "portal_base.html" %}
+{% block title %}Track Request{% endblock %}
+{% block body %}
+<h1>Track your request</h1>
+<form method="get" action="/portal/track" class="searchbar">
+  <input type="text" name="order_id" placeholder="Order ID, e.g. ORD-98231" value="{{ order_id }}" required>
+  <button type="submit">Track</button>
+</form>
+
+{% if found and not order %}
+  <div class="alert bad">No order found for <code>{{ order_id }}</code>.</div>
+{% endif %}
+
+{% if order %}
+  <div class="orderbox">
+    <h2>Order {{ order.order_id }} — {{ order.customer_name }}</h2>
+    {% if tickets %}
+    <table>
+      <thead><tr><th>Ticket</th><th>Claim</th><th>Proof</th><th>Decision</th><th>Status</th><th>Updated</th></tr></thead>
+      <tbody>
+      {% for t in tickets %}
+        <tr>
+          <td><code>{{ t.ticket_id }}</code></td>
+          <td>{{ t.customer_claim }}</td>
+          <td>{% if t.proof_url %}<a href="{{ t.proof_url }}" target="_blank">view</a>{% else %}—{% endif %}</td>
+          <td>{{ t.agent_decision }}</td>
+          <td><span class="pill {{ t.status|lower|replace(' ','-') }}">{{ t.status }}</span></td>
+          <td>{{ t.updated_at.strftime('%d %b %H:%M') if t.updated_at else '—' }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      <div class="alert">No requests raised for this order yet.
+        <a href="/portal/order?order_id={{ order.order_id }}">Raise one →</a></div>
+    {% endif %}
+  </div>
+{% endif %}
+{% endblock %}

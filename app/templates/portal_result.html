@@ -1,0 +1,45 @@
+{% extends "portal_base.html" %}
+{% block title %}Request Result{% endblock %}
+{% block body %}
+<h1>Request submitted</h1>
+
+{% if result.status == 'ELIGIBLE' %}
+  <div class="alert good">
+    <strong>Approved — {{ result.remedy|title }}</strong>
+    <p>{{ result.reason }}</p>
+  </div>
+{% elif result.status == 'NEEDS_PROOF' %}
+  <div class="alert warn">
+    <strong>More information needed</strong>
+    <p>{{ result.reason }}</p>
+  </div>
+{% else %}
+  <div class="alert bad">
+    <strong>Not eligible</strong>
+    <p>{{ result.reason }}</p>
+  </div>
+{% endif %}
+
+{% if ticket %}
+<div class="orderbox">
+  <h2>Your ticket</h2>
+  <table class="kv">
+    <tr><th>Ticket ID</th><td><code>{{ ticket.ticket_id }}</code></td></tr>
+    <tr><th>Order</th><td><code>{{ ticket.order_id }}</code></td></tr>
+    <tr><th>Decision</th><td>{{ ticket.agent_decision }}</td></tr>
+    <tr><th>Status</th><td>{{ ticket.status }}</td></tr>
+    <tr><th>Next</th><td>{{ 'We will arrange the replacement within 5-7 business days.'
+        if result.remedy == 'REPLACEMENT' else
+        ('Refund will be processed to your original payment method in 5-7 business days.'
+         if result.remedy == 'REFUND' else 'Our team will review and contact you.') }}</td></tr>
+  </table>
+</div>
+{% endif %}
+
+<div class="orderbox">
+  <h2>Policy checks</h2>
+  <ul class="checks">{% for c in result.checks %}<li>{{ c }}</li>{% endfor %}</ul>
+</div>
+
+<a class="bigcard" href="/portal/track?order_id={{ order.order_id if order else '' }}">Track this request →</a>
+{% endblock %}

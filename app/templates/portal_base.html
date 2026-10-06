@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Customer Portal{% endblock %}</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body class="portal">
+  <header class="topbar">
+    <a href="/portal" class="brand">🛒 Store Support</a>
+    <nav>
+      <a href="/portal">Home</a>
+      <a href="/portal/order">My Order</a>
+      <a href="/portal/track">Track Request</a>
+    </nav>
+  </header>
+  <main class="page">
+    {% block body %}{% endblock %}
+  </main>
+  <footer class="pfoot">Need help? Contact support@store.example · <a href="/">Staff login</a></footer>
+</body>
+</html>
