@@ -18,6 +18,24 @@ WA_TOKEN = os.environ.get("WA_TOKEN", "")            # Meta Cloud API
 WA_PHONE_ID = os.environ.get("WA_PHONE_ID", "")
 
 
+def dev_otp_enabled() -> bool:
+    """Whether to surface OTPs in the UI / a dev cookie.
+
+    Production-safe default: off whenever a real WhatsApp channel is
+    configured, because an exposed OTP lets anyone take over an account.
+    `DEV_OTP` overrides explicitly (`1`/`true` on, `0`/`false` off).
+
+    Reads os.environ live (not the module constants, which are captured at
+    import) so tests and late env changes behave predictably.
+    """
+    raw = os.environ.get("DEV_OTP")
+    if raw is not None:
+        return raw.strip().lower() in ("1", "true", "yes", "on")
+    has_cloud = bool(os.environ.get("WA_TOKEN")) and bool(os.environ.get("WA_PHONE_ID"))
+    has_bridge = bool(os.environ.get("WA_BRIDGE_URL"))
+    return not has_cloud and not has_bridge
+
+
 def _log(db: Session, channel, to, kind, body, status, error="", order_id=""):
     n = models.Notification(channel=channel, to=to, kind=kind, body=body,
                             status=status, error=error, order_id=order_id)

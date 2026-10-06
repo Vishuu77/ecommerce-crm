@@ -90,16 +90,17 @@ def register(request: Request, name: str = Form(...), email: str = Form(...),
     # signed handle to *this* registration, so /verify can't land on another
     # account that shares the number
     resp.set_cookie(OTP_COOKIE, auth.make_pending(user.id), max_age=900, httponly=True)
-    # dev convenience: surface the code when no channel is configured
-    if not notify.WA_TOKEN and not notify.WA_PHONE_ID:
-        resp.set_cookie("dev_otp", code, max_age=900)
+    # dev convenience only — never expose an OTP in production
+    if notify.dev_otp_enabled():
+        resp.set_cookie("dev_otp", code, max_age=900, httponly=True)
     return resp
 
 
 @router.get("/shop/verify", response_class=HTMLResponse)
 def verify_page(request: Request, phone: str = "", db: Session = Depends(get_db)):
     return _render(request, "shop/verify.html", phone=phone,
-                   dev_otp=request.cookies.get("dev_otp", ""), cart_count=0)
+                   dev_otp=request.cookies.get("dev_otp", "") if notify.dev_otp_enabled() else "",
+                   cart_count=0)
 
 
 @router.post("/shop/verify", response_class=HTMLResponse)
@@ -125,7 +126,8 @@ def verify(request: Request, phone: str = Form(...), code: str = Form(...),
         error = "Incorrect OTP."
     if error:
         return _render(request, "shop/verify.html", phone=phone_e164, error=error,
-                       dev_otp=request.cookies.get("dev_otp", ""), cart_count=0)
+                       dev_otp=request.cookies.get("dev_otp", "") if notify.dev_otp_enabled() else "",
+                       cart_count=0)
 
     otp.consumed = True
     user.phone_verified = True
