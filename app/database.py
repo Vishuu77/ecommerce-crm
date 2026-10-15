@@ -4,7 +4,7 @@ Set DATABASE_URL to point at Postgres/Supabase for cloud, e.g.
     postgresql+psycopg://user:pass@host:5432/db
 """
 import os
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import sessionmaker, declarative_base
 
 DATABASE_URL = os.environ.get(
@@ -26,6 +26,28 @@ def get_db():
         db.close()
 
 
+_ADDED_COLUMNS = {
+    "products": {
+        "mrp": "FLOAT DEFAULT 0",
+        "rating": "FLOAT DEFAULT 0",
+        "review_count": "INTEGER DEFAULT 0",
+    },
+}
+
+
+def _add_missing_columns():
+    insp = inspect(engine)
+    with engine.begin() as conn:
+        for table, columns in _ADDED_COLUMNS.items():
+            if table not in insp.get_table_names():
+                continue
+            existing = {c["name"] for c in insp.get_columns(table)}
+            for name, ddl in columns.items():
+                if name not in existing:
+                    conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {name} {ddl}"))
+
+
 def init_db():
     from app import models  # noqa: F401  (register tables)
     Base.metadata.create_all(bind=engine)
+    _add_missing_columns()
